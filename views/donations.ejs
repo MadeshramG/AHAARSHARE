@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="Browse available food donations near you on AaharShare.">
+  <title>AaharShare - Food Donations</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <%- include('partials/pwa-head') %>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Top Navbar -->
+    <nav class="navbar">
+      <a href="/dashboard" class="nav-brand">
+        <div class="brand-icon">🍛</div>
+        <h1>AaharShare</h1>
+      </a>
+      <div class="nav-actions">
+        <span class="nav-user">👋 <%= userName %></span>
+        <a href="/auth/logout" class="logout-btn">Logout</a>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="page-title">
+        📋 Food Donations
+        <% if (userRole === 'donor') { %>
+          <a href="/donations/new" class="btn btn-primary btn-sm" style="margin-left:auto;">➕ Add</a>
+        <% } %>
+      </div>
+
+      <!-- Filter Tabs -->
+      <div class="filter-tabs">
+        <button class="filter-tab active" onclick="filterDonations('all')">All</button>
+        <button class="filter-tab" onclick="filterDonations('Available')">🟢 Available</button>
+        <button class="filter-tab" onclick="filterDonations('Claimed')">🟡 Claimed</button>
+        <button class="filter-tab" onclick="filterDonations('Picked Up')">🔵 Picked Up</button>
+        <button class="filter-tab" onclick="filterDonations('Delivered')">✅ Delivered</button>
+      </div>
+
+      <!-- Donation Cards -->
+      <div id="donation-list">
+        <% if (donations.length === 0) { %>
+          <div class="empty-state">
+            <div class="empty-icon">🍽️</div>
+            <h3>No donations yet</h3>
+            <p>Be the first to share surplus food!</p>
+            <% if (userRole === 'donor') { %>
+              <a href="/donations/new" class="btn btn-primary">➕ Donate Food</a>
+            <% } %>
+          </div>
+        <% } else { %>
+          <% donations.forEach(function(d, idx) { %>
+            <div class="donation-card" data-status="<%= d.status %>" style="animation-delay: <%= idx * 0.05 %>s">
+              <div class="card-header">
+                <span class="food-name"><%= d.foodName %></span>
+                <span class="food-type <%= d.foodType %>">
+                  <%= d.foodType === 'veg' ? '🟢' : '🔴' %> <%= d.foodType %>
+                </span>
+              </div>
+
+              <% if (d.donor) { %>
+                <div class="donor-info">
+                  👤 <strong><%= d.donor.name %></strong>
+                  <% if (d.donor.organization) { %> · <%= d.donor.organization %><% } %>
+                </div>
+              <% } %>
+
+              <div class="card-details">
+                <div class="detail-item">
+                  <span class="detail-icon">🍽️</span>
+                  <span class="detail-value"><%= d.servings %> servings</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-icon">⏰</span>
+                  <span class="detail-value"><%= d.cookedAt %></span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-icon">📦</span>
+                  <span class="detail-value"><%= d.quantity %></span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-icon">📞</span>
+                  <span class="detail-value"><%= d.contactPhone %></span>
+                </div>
+                <div class="detail-item detail-full">
+                  <span class="detail-icon">📍</span>
+                  <span class="detail-value"><%= d.pickupAddress %></span>
+                </div>
+              </div>
+
+              <% if (d.description) { %>
+                <div class="card-description"><%= d.description %></div>
+              <% } %>
+
+              <% if (d.claimedBy) { %>
+                <div class="donor-info mb-1">
+                  🤝 Claimed by: <strong><%= d.claimedBy.name %></strong>
+                  <% if (d.claimedBy.organization) { %> · <%= d.claimedBy.organization %><% } %>
+                </div>
+              <% } %>
+
+              <div class="card-footer">
+                <span class="status-badge <%= d.status.toLowerCase().replace(' ', '-') %>">
+                  <% if (d.status === 'Available') { %>🟢
+                  <% } else if (d.status === 'Claimed') { %>🟡
+                  <% } else if (d.status === 'Picked Up') { %>🔵
+                  <% } else { %>✅
+                  <% } %>
+                  <%= d.status %>
+                </span>
+
+                <div class="btn-group">
+                  <%/* NGO can claim available food */%>
+                  <% if (userRole === 'ngo' && d.status === 'Available') { %>
+                    <form action="/donations/<%= d._id %>/claim" method="POST" style="display:inline;">
+                      <button type="submit" class="btn btn-success btn-sm">🤝 Claim</button>
+                    </form>
+                  <% } %>
+
+                  <%/* NGO who claimed can update status */%>
+                  <% if (userRole === 'ngo' && d.claimedBy && d.claimedBy._id.toString() === userId.toString()) { %>
+                    <% if (d.status === 'Claimed') { %>
+                      <form action="/donations/<%= d._id %>/pickup" method="POST" style="display:inline;">
+                        <button type="submit" class="btn btn-warning btn-sm">📦 Picked Up</button>
+                      </form>
+                    <% } else if (d.status === 'Picked Up') { %>
+                      <form action="/donations/<%= d._id %>/deliver" method="POST" style="display:inline;">
+                        <button type="submit" class="btn btn-secondary btn-sm">✅ Delivered</button>
+                      </form>
+                    <% } %>
+                  <% } %>
+
+                  <%/* Donor can edit/delete their own available donations */%>
+                  <% if (userRole === 'donor' && d.donor && d.donor._id.toString() === userId.toString() && d.status === 'Available') { %>
+                    <a href="/donations/<%= d._id %>/edit" class="btn btn-outline btn-sm">✏️ Edit</a>
+                    <form action="/donations/<%= d._id %>/delete" method="POST" style="display:inline;" onsubmit="return confirm('Delete this donation?')">
+                      <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
+                    </form>
+                  <% } %>
+
+                  <%/* Admin can delete any */%>
+                  <% if (userRole === 'admin') { %>
+                    <form action="/donations/<%= d._id %>/delete" method="POST" style="display:inline;" onsubmit="return confirm('Delete this donation?')">
+                      <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
+                    </form>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <a href="/dashboard">
+        <span class="nav-icon">🏠</span>
+        Home
+      </a>
+      <a href="/donations" class="active">
+        <span class="nav-icon">📋</span>
+        Feed
+      </a>
+      <% if (userRole === 'donor') { %>
+        <a href="/donations/new">
+          <span class="nav-icon">➕</span>
+          Donate
+        </a>
+      <% } %>
+      <% if (userRole === 'admin') { %>
+        <a href="/admin">
+          <span class="nav-icon">⚙️</span>
+          Admin
+        </a>
+      <% } %>
+    </nav>
+  </div>
+
+  <script>
+    function filterDonations(status) {
+      const cards = document.querySelectorAll('.donation-card');
+      const tabs = document.querySelectorAll('.filter-tab');
+
+      tabs.forEach(t => t.classList.remove('active'));
+      event.target.classList.add('active');
+
+      cards.forEach(card => {
+        if (status === 'all' || card.dataset.status === status) {
+          card.style.display = '';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+  </script>
+  <%- include('partials/pwa-script') %>
+</body>
+</html>

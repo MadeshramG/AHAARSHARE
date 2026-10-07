@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="AaharShare Dashboard - Track food donations and meals saved.">
+  <title>AaharShare - Dashboard</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <%- include('partials/pwa-head') %>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Top Navbar -->
+    <nav class="navbar">
+      <a href="/dashboard" class="nav-brand">
+        <div class="brand-icon">🍛</div>
+        <h1>AaharShare</h1>
+      </a>
+      <div class="nav-actions">
+        <span class="nav-user">👋 <%= userName %></span>
+        <a href="/auth/logout" class="logout-btn">Logout</a>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="dashboard-header">
+        <h2>Hello, <%= userName %> 👋</h2>
+        <p>
+          <% if (userRole === 'donor') { %>
+            You are logged in as a <strong>Food Donor</strong>
+          <% } else if (userRole === 'ngo') { %>
+            You are logged in as an <strong>NGO / Volunteer</strong>
+          <% } else { %>
+            You are logged in as an <strong>Admin</strong>
+          <% } %>
+        </p>
+      </div>
+
+      <!-- Meals Saved Banner -->
+      <div class="meals-saved-banner">
+        <div class="counter"><%= totalMealsSaved %></div>
+        <div class="counter-label">🍽️ Total Meals Saved from Waste</div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number"><%= stats.available %></div>
+          <div class="stat-label">Available</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number"><%= stats.claimed %></div>
+          <div class="stat-label">Claimed</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number"><%= stats.pickedUp %></div>
+          <div class="stat-label">Picked Up</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number"><%= stats.delivered %></div>
+          <div class="stat-label">Delivered</div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="quick-actions">
+        <% if (userRole === 'donor') { %>
+          <a href="/donations/new" class="quick-action-btn">
+            <div class="action-icon orange">➕</div>
+            <div class="action-text">
+              <h3>Donate Food</h3>
+              <p>Post surplus food for NGOs to pick up</p>
+            </div>
+          </a>
+        <% } %>
+
+        <a href="/donations" class="quick-action-btn">
+          <div class="action-icon teal">📋</div>
+          <div class="action-text">
+            <h3>View All Donations</h3>
+            <p>Browse all available food donations</p>
+          </div>
+        </a>
+
+        <% if (userRole === 'admin') { %>
+          <a href="/admin" class="quick-action-btn">
+            <div class="action-icon blue">⚙️</div>
+            <div class="action-text">
+              <h3>Admin Panel</h3>
+              <p>Manage users and donations</p>
+            </div>
+          </a>
+        <% } %>
+      </div>
+
+      <!-- Recent Donations -->
+      <% if (recentDonations.length > 0) { %>
+        <h3 class="section-title">📌 Recent Activity</h3>
+        <% recentDonations.forEach(function(d) { %>
+          <div class="donation-card">
+            <div class="card-header">
+              <span class="food-name"><%= d.foodName %></span>
+              <span class="food-type <%= d.foodType %>">
+                <%= d.foodType === 'veg' ? '🟢' : '🔴' %> <%= d.foodType %>
+              </span>
+            </div>
+            <div class="card-details">
+              <div class="detail-item">
+                <span class="detail-icon">🍽️</span>
+                <span class="detail-value"><%= d.servings %> servings</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-icon">⏰</span>
+                <span class="detail-value"><%= d.cookedAt %></span>
+              </div>
+            </div>
+            <div class="card-footer">
+              <span class="status-badge <%= d.status.toLowerCase().replace(' ', '-') %>">
+                <% if (d.status === 'Available') { %>🟢
+                <% } else if (d.status === 'Claimed') { %>🟡
+                <% } else if (d.status === 'Picked Up') { %>🔵
+                <% } else { %>✅
+                <% } %>
+                <%= d.status %>
+              </span>
+            </div>
+          </div>
+        <% }) %>
+      <% } %>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <a href="/dashboard" class="active">
+        <span class="nav-icon">🏠</span>
+        Home
+      </a>
+      <a href="/donations">
+        <span class="nav-icon">📋</span>
+        Feed
+      </a>
+      <% if (userRole === 'donor') { %>
+        <a href="/donations/new">
+          <span class="nav-icon">➕</span>
+          Donate
+        </a>
+      <% } %>
+      <% if (userRole === 'admin') { %>
+        <a href="/admin">
+          <span class="nav-icon">⚙️</span>
+          Admin
+        </a>
+      <% } %>
+    </nav>
+  </div>
+  <%- include('partials/pwa-script') %>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "name": "AaharShare - Share Food, Share Hope",
+  "short_name": "AaharShare",
+  "description": "Connect surplus food with NGOs and shelters. Reduce food waste, save meals.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0F1923",
+  "theme_color": "#FF6B35",
+  "orientation": "portrait",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["food", "social", "lifestyle"],
+  "lang": "en",
+  "dir": "ltr"
+}

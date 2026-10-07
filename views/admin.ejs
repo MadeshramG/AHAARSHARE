@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="AaharShare Admin Panel - Manage users and donations.">
+  <title>AaharShare - Admin Panel</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <%- include('partials/pwa-head') %>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Top Navbar -->
+    <nav class="navbar">
+      <a href="/dashboard" class="nav-brand">
+        <div class="brand-icon">🍛</div>
+        <h1>AaharShare</h1>
+      </a>
+      <div class="nav-actions">
+        <span class="nav-user">⚙️ Admin</span>
+        <a href="/auth/logout" class="logout-btn">Logout</a>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="dashboard-header">
+        <h2>⚙️ Admin Panel</h2>
+        <p>Manage users and monitor the platform</p>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number"><%= stats.totalUsers %></div>
+          <div class="stat-label">Users</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number"><%= stats.totalDonors %></div>
+          <div class="stat-label">Donors</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number"><%= stats.totalNGOs %></div>
+          <div class="stat-label">NGOs</div>
+        </div>
+        <div class="stat-card highlight">
+          <div class="stat-number"><%= stats.totalMealsSaved %></div>
+          <div class="stat-label">Meals Saved</div>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number"><%= stats.totalDonations %></div>
+          <div class="stat-label">Total Posts</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number"><%= stats.availableDonations %></div>
+          <div class="stat-label">Available</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number"><%= stats.claimedDonations %></div>
+          <div class="stat-label">Claimed</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number"><%= stats.deliveredDonations %></div>
+          <div class="stat-label">Delivered</div>
+        </div>
+      </div>
+
+      <!-- Users Section -->
+      <h3 class="section-title">👥 All Users (<%= users.length %>)</h3>
+      <% users.forEach(function(user) { %>
+        <div class="user-card">
+          <div class="user-info">
+            <div class="user-name"><%= user.name %></div>
+            <div class="user-detail"><%= user.email %> · <%= user.phone %></div>
+            <% if (user.organization) { %>
+              <div class="user-detail">🏢 <%= user.organization %></div>
+            <% } %>
+          </div>
+          <span class="role-badge <%= user.role %>"><%= user.role %></span>
+          <% if (user.role !== 'admin') { %>
+            <form action="/admin/users/<%= user._id %>/delete" method="POST" style="display:inline;" onsubmit="return confirm('Delete this user and their donations?')">
+              <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
+            </form>
+          <% } %>
+        </div>
+      <% }) %>
+
+      <!-- Donations Section -->
+      <h3 class="section-title">📋 All Donations (<%= donations.length %>)</h3>
+      <% if (donations.length === 0) { %>
+        <div class="empty-state">
+          <div class="empty-icon">📭</div>
+          <h3>No donations yet</h3>
+        </div>
+      <% } else { %>
+        <% donations.forEach(function(d) { %>
+          <div class="donation-card">
+            <div class="card-header">
+              <span class="food-name"><%= d.foodName %></span>
+              <span class="status-badge <%= d.status.toLowerCase().replace(' ', '-') %>">
+                <%= d.status %>
+              </span>
+            </div>
+            <% if (d.donor) { %>
+              <div class="donor-info">
+                👤 <strong><%= d.donor.name %></strong> · <%= d.donor.email %>
+              </div>
+            <% } %>
+            <div class="card-details">
+              <div class="detail-item">
+                <span class="detail-icon">🍽️</span>
+                <span class="detail-value"><%= d.servings %> servings</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-icon">📦</span>
+                <span class="detail-value"><%= d.quantity %></span>
+              </div>
+            </div>
+            <div class="card-footer">
+              <span class="food-type <%= d.foodType %>">
+                <%= d.foodType === 'veg' ? '🟢' : '🔴' %> <%= d.foodType %>
+              </span>
+              <form action="/admin/donations/<%= d._id %>/delete" method="POST" style="display:inline;" onsubmit="return confirm('Delete this donation?')">
+                <button type="submit" class="btn btn-danger btn-sm">🗑️ Delete</button>
+              </form>
+            </div>
+          </div>
+        <% }) %>
+      <% } %>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <a href="/dashboard">
+        <span class="nav-icon">🏠</span>
+        Home
+      </a>
+      <a href="/donations">
+        <span class="nav-icon">📋</span>
+        Feed
+      </a>
+      <a href="/admin" class="active">
+        <span class="nav-icon">⚙️</span>
+        Admin
+      </a>
+    </nav>
+  </div>
+  <%- include('partials/pwa-script') %>
+</body>
+</html>
